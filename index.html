@@ -1,79 +1,848 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#4f46e5">
-<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">
-<title>Math Quest</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17172b">
+<title>🎮 Math Quest</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f4f6fb;color:#182033}
-main{max-width:720px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}
-h1{margin:0;font-size:25px}.muted{color:#687086}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
-.card{background:white;border:1px solid #e2e5ee;border-radius:18px;padding:15px;margin:12px 0;box-shadow:0 4px 18px #1820330d}
-.stat{text-align:center}.num{font-size:25px;font-weight:800}.task{display:flex;gap:10px;align-items:center;padding:13px 0;border-bottom:1px solid #eee}
-.task:last-child{border:0}.task input{width:21px;height:21px}.btn{border:0;border-radius:12px;padding:12px 15px;background:#4f46e5;color:white;font-weight:700;cursor:pointer}
-.btn:disabled{opacity:.45}.shop{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{border:1px solid #e2e5ee;border-radius:15px;padding:13px}
-.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef0ff;font-size:12px}
-.progress{height:10px;background:#e8eaf1;border-radius:99px;overflow:hidden}.bar{height:100%;background:#4f46e5;width:0}
-@media(max-width:520px){.grid,.shop{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
-</style>
-<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Math Quest">
-</head>
-<body>
-<main>
-<div class="top"><div><h1>🎮 Math Quest</h1><div class="muted">بازیِ مرور و تمرین ریاضی</div></div><span class="badge">🔥 Streak: <b id="streak">0</b></span></div>
-
-<div class="grid">
-<div class="card stat"><div class="muted">XP</div><div class="num" id="xp">0</div></div>
-<div class="card stat"><div class="muted">🪙 Coin</div><div class="num" id="coins">0</div></div>
-<div class="card stat"><div class="muted">Level</div><div class="num" id="level">1</div></div>
-</div>
-
-<div class="card">
-<h3>📅 مأموریت‌های هفته</h3>
-<label class="task"><input type="checkbox" data-xp="5"> مبحث شنبه را خواندم <span class="badge">+5 XP</span></label>
-<label class="task"><input type="checkbox" data-xp="5"> تمرین شنبه را انجام دادم <span class="badge">+5 XP</span></label>
-<label class="task"><input type="checkbox" data-xp="5"> مبحث یک‌شنبه را مرور کردم <span class="badge">+5 XP</span></label>
-<label class="task"><input type="checkbox" data-xp="5"> تمرین یک‌شنبه را انجام دادم <span class="badge">+5 XP</span></label>
-<label class="task"><input type="checkbox" data-xp="5"> دوشنبه مباحث هفته را مرور کردم <span class="badge">+5 XP</span></label>
-<label class="task"><input type="checkbox" data-xp="5"> چند سؤال برای خودم حل کردم <span class="badge">+5 XP</span></label>
-<div style="margin-top:15px"><div class="muted">پیشرفت مپ</div><div class="progress"><div class="bar" id="bar"></div></div></div>
-</div>
-
-<div class="card">
-<h3>🛒 فروشگاه پاداش</h3>
-<div class="shop">
-<div class="item"><b>☕ +5 دقیقه استراحت</b><p class="muted">هزینه: 10 🪙</p><button class="btn buy" data-cost="10" data-reward="۵ دقیقه استراحت">خرید</button></div>
-<div class="item"><b>🧩 یک راهنمای اضافه</b><p class="muted">هزینه: 15 🪙</p><button class="btn buy" data-cost="15" data-reward="راهنمای اضافه">خرید</button></div>
-<div class="item"><b>🎯 +10 دقیقه زمان آزاد</b><p class="muted">هزینه: 25 🪙</p><button class="btn buy" data-cost="25" data-reward="۱۰ دقیقه زمان آزاد">خرید</button></div>
-<div class="item"><b>⭐ پاداش ویژه</b><p class="muted">هزینه: 40 🪙</p><button class="btn buy" data-cost="40" data-reward="پاداش ویژه">خرید</button></div>
-</div>
-<p id="message" class="muted"></p>
-</div>
-
-<div class="card">
-<h3>🏆 قانون XP</h3>
-<p class="muted">هر 50 XP یک Level جدید می‌دهد. با کامل کردن همه مأموریت‌های این مپ، 5 Coin جایزه می‌گیری.</p>
-<button id="mapReward" class="btn">گرفتن 5 Coin برای تکمیل مپ</button>
-</div>
-</main>
-<script>
-const qs=s=>document.querySelector(s), checks=[...document.querySelectorAll('input[type=checkbox]')];
-let xp=0,coins=0,streak=0,claimed=false;
-function render(){
- qs('#xp').textContent=xp;qs('#coins').textContent=coins;qs('#level').textContent=Math.floor(xp/50)+1;
- qs('#streak').textContent=streak;let done=checks.filter(x=>x.checked).length;
- qs('#bar').style.width=(done/checks.length*100)+'%';
- qs('#mapReward').disabled=done!==checks.length||claimed;
- qs('#mapReward').textContent=claimed?'پاداش مپ دریافت شد ✓':'گرفتن 5 Coin برای تکمیل مپ';
- document.querySelectorAll('.buy').forEach(b=>b.disabled=coins<+b.dataset.cost);
+* {
+    box-sizing: border-box;
+    font-family: Tahoma, Arial, sans-serif;
 }
-checks.forEach(c=>c.addEventListener('change',()=>{xp=Math.max(0,xp+(c.checked?+c.dataset.xp:-c.dataset.xp));streak=checks.some(x=>x.checked)?1:0;render()}));
-qs('#mapReward').onclick=()=>{if(checks.every(x=>x.checked)&&!claimed){coins+=5;claimed=true;qs('#message').textContent='🎉 5 کوین گرفتی!';render()}};
-document.querySelectorAll('.buy').forEach(b=>b.onclick=()=>{let cost=+b.dataset.cost;if(coins>=cost){coins-=cost;qs('#message').textContent='🎁 دریافت شد: '+b.dataset.reward;render()}});
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, #30305c 0%, #17172b 45%, #0d0d19 100%);
+    color: white;
+}
+
+.container {
+    width: min(100% - 24px, 850px);
+    margin: auto;
+    padding: 20px 0 50px;
+}
+
+header {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.logo {
+    font-size: 42px;
+    margin-bottom: 5px;
+}
+
+h1 {
+    margin: 5px 0;
+    font-size: 30px;
+}
+
+.subtitle {
+    color: #bdbde8;
+    font-size: 14px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.stat {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 18px;
+    padding: 14px 8px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,.18);
+}
+
+.stat-icon {
+    font-size: 25px;
+}
+
+.stat-value {
+    font-size: 21px;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.stat-name {
+    color: #aaaad0;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.card {
+    background: rgba(27,27,52,.88);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 22px;
+    padding: 20px;
+    margin-top: 16px;
+    box-shadow: 0 12px 35px rgba(0,0,0,.22);
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.level-info {
+    display: flex;
+    justify-content: space-between;
+    color: #c8c8e8;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.progress {
+    width: 100%;
+    height: 13px;
+    background: #10101e;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg,#7c5cff,#00d4ff);
+    border-radius: 20px;
+    transition: width .5s ease;
+}
+
+.mission {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px;
+    margin: 9px 0;
+    background: rgba(255,255,255,.05);
+    border-radius: 15px;
+    transition: .25s;
+}
+
+.mission:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,.08);
+}
+
+.mission input {
+    width: 21px;
+    height: 21px;
+    accent-color: #7c5cff;
+}
+
+.mission-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+.xp-badge {
+    background: #473b86;
+    color: #dcd5ff;
+    padding: 5px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.shop {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 12px;
+}
+
+.shop-item {
+    background: rgba(255,255,255,.055);
+    border-radius: 17px;
+    padding: 15px;
+}
+
+.shop-icon {
+    font-size: 30px;
+}
+
+.shop-name {
+    font-weight: bold;
+    margin: 6px 0;
+}
+
+.cost {
+    color: #ffd75e;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    padding: 9px 14px;
+    color: white;
+    background: linear-gradient(135deg,#7357ff,#4d8dff);
+    font-weight: bold;
+    transition: .2s;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.12);
+}
+
+button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+#mapReward {
+    width: 100%;
+    margin-top: 15px;
+    padding: 13px;
+}
+
+.message {
+    text-align: center;
+    min-height: 25px;
+    color: #ffd75e;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.achievements {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
+}
+
+.achievement {
+    text-align: center;
+    padding: 15px 8px;
+    border-radius: 15px;
+    background: rgba(255,255,255,.05);
+    opacity: .4;
+    transition: .3s;
+}
+
+.achievement.unlocked {
+    opacity: 1;
+    background: linear-gradient(135deg,rgba(124,92,255,.25),rgba(0,212,255,.12));
+}
+
+.achievement-icon {
+    font-size: 28px;
+}
+
+.achievement-name {
+    font-size: 12px;
+    margin-top: 7px;
+}
+
+.streak-box {
+    text-align: center;
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,190,50,.08));
+}
+
+.fire {
+    font-size: 45px;
+    animation: fire 1.2s infinite alternate;
+}
+
+@keyframes fire {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+}
+
+.footer {
+    text-align: center;
+    color: #77779b;
+    margin-top: 25px;
+    font-size: 12px;
+}
+
+.coin-pop {
+    position: fixed;
+    pointer-events: none;
+    font-size: 20px;
+    animation: pop 1s ease forwards;
+    z-index: 999;
+}
+
+@keyframes pop {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-80px) scale(1.5);
+    }
+}
+
+@media(max-width:600px) {
+    .stats {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .shop {
+        grid-template-columns: 1fr;
+    }
+
+    .achievements {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    h1 {
+        font-size: 25px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <div class="logo">🎮</div>
+    <h1>Math Quest</h1>
+    <div class="subtitle">بازی مرور و تمرین ریاضی 🔥</div>
+</header>
+
+<div class="stats">
+
+    <div class="stat">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-value" id="streak">0</div>
+        <div class="stat-name">روز متوالی</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-value" id="xp">0</div>
+        <div class="stat-name">XP</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-icon">🪙</div>
+        <div class="stat-value" id="coins">0</div>
+        <div class="stat-name">Coin</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value" id="level">1</div>
+        <div class="stat-name">Level</div>
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">🔥 وضعیت Streak</div>
+
+    <div class="streak-box">
+        <div class="fire">🔥</div>
+        <div>
+            الان <b id="streakText">0</b> روز متوالی داری ادامه می‌دی!
+        </div>
+        <div style="color:#aaaad0;font-size:12px;margin-top:7px;">
+            یک روز استراحت مشکلی ایجاد نمی‌کند.
+        </div>
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">📈 پیشرفت Level</div>
+
+    <div class="level-info">
+        <span>Level <b id="level2">1</b></span>
+        <span id="levelProgress">0 / 50 XP</span>
+    </div>
+
+    <div class="progress">
+        <div class="progress-bar" id="levelBar"></div>
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">📅 مأموریت‌های هفته</div>
+
+    <div class="mission">
+        <input type="checkbox" data-xp="5">
+        <div class="mission-text">مبحث شنبه را خواندم</div>
+        <span class="xp-badge">+5 XP</span>
+    </div>
+
+    <div class="mission">
+        <input type="checkbox" data-xp="5">
+        <div class="mission-text">تمرین شنبه را انجام دادم</div>
+        <span class="xp-badge">+5 XP</span>
+    </div>
+
+    <div class="mission">
+        <input type="checkbox" data-xp="5">
+        <div class="mission-text">مبحث یکشنبه را مرور کردم</div>
+        <span class="xp-badge">+5 XP</span>
+    </div>
+
+    <div class="mission">
+        <input type="checkbox" data-xp="5">
+        <div class="mission-text">تمرین یکشنبه را انجام دادم</div>
+        <span class="xp-badge">+5 XP</span>
+    </div>
+
+    <div class="mission">
+        <input type="checkbox" data-xp="5">
+        <div class="mission-text">دوشنبه مباحث هفته را مرور کردم</div>
+        <span class="xp-badge">+5 XP</span>
+    </div>
+
+    <div class="mission">
+        <input type="checkbox" data-xp="5">
+        <div class="mission-text">چند سؤال برای خودم حل کردم</div>
+        <span class="xp-badge">+5 XP</span>
+    </div>
+
+    <div class="progress" style="margin-top:15px;">
+        <div class="progress-bar" id="bar"></div>
+    </div>
+
+    <button id="mapReward">
+        🎁 گرفتن 5 Coin برای تکمیل مپ
+    </button>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">🛒 فروشگاه پاداش</div>
+
+    <div class="shop">
+
+        <div class="shop-item">
+            <div class="shop-icon">☕</div>
+            <div class="shop-name">5 دقیقه استراحت</div>
+            <div class="cost">هزینه: 10 🪙</div>
+            <button class="buy"
+                    data-cost="10"
+                    data-reward="☕ 5 دقیقه استراحت">
+                خرید
+            </button>
+        </div>
+
+        <div class="shop-item">
+            <div class="shop-icon">🧩</div>
+            <div class="shop-name">یک راهنمای اضافه</div>
+            <div class="cost">هزینه: 15 🪙</div>
+            <button class="buy"
+                    data-cost="15"
+                    data-reward="🧩 یک راهنمای اضافه">
+                خرید
+            </button>
+        </div>
+
+        <div class="shop-item">
+            <div class="shop-icon">🎯</div>
+            <div class="shop-name">10 دقیقه زمان آزاد</div>
+            <div class="cost">هزینه: 25 🪙</div>
+            <button class="buy"
+                    data-cost="25"
+                    data-reward="🎯 10 دقیقه زمان آزاد">
+                خرید
+            </button>
+        </div>
+
+        <div class="shop-item">
+            <div class="shop-icon">⭐</div>
+            <div class="shop-name">پاداش ویژه</div>
+            <div class="cost">هزینه: 40 🪙</div>
+            <button class="buy"
+                    data-cost="40"
+                    data-reward="⭐ پاداش ویژه">
+                خرید
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">🏆 دستاوردها</div>
+
+    <div class="achievements">
+
+        <div class="achievement" id="ach1">
+            <div class="achievement-icon">🔥</div>
+            <div class="achievement-name">3 روز Streak</div>
+        </div>
+
+        <div class="achievement" id="ach2">
+            <div class="achievement-icon">🔥</div>
+            <div class="achievement-name">7 روز Streak</div>
+        </div>
+
+        <div class="achievement" id="ach3">
+            <div class="achievement-icon">⭐</div>
+            <div class="achievement-name">100 XP</div>
+        </div>
+
+        <div class="achievement" id="ach4">
+            <div class="achievement-icon">🪙</div>
+            <div class="achievement-name">50 Coin</div>
+        </div>
+
+        <div class="achievement" id="ach5">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-name">Level 5</div>
+        </div>
+
+        <div class="achievement" id="ach6">
+            <div class="achievement-icon">🎯</div>
+            <div class="achievement-name">تکمیل یک مپ</div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="message" id="message"></div>
+
+<div class="footer">
+    Math Quest • یادگیری ریاضی با بازی 🎮
+</div>
+
+</div>
+
+<script>
+
+const qs = s => document.querySelector(s);
+
+const checks = [
+    ...document.querySelectorAll('input[type="checkbox"]')
+];
+
+const STORAGE_KEY = "mathQuestSave_v2";
+
+let data = JSON.parse(
+    localStorage.getItem(STORAGE_KEY)
+) || {
+    xp: 0,
+    coins: 0,
+    streak: 0,
+    lastPlayed: null,
+    claimed: false,
+    checked: []
+};
+
+let xp = data.xp;
+let coins = data.coins;
+let streak = data.streak;
+let lastPlayed = data.lastPlayed;
+let claimed = data.claimed;
+
+function getToday() {
+
+    const d = new Date();
+
+    return d.getFullYear() +
+        "-" +
+        String(d.getMonth()+1).padStart(2,"0") +
+        "-" +
+        String(d.getDate()).padStart(2,"0");
+}
+
+function dayDifference(a,b) {
+
+    const d1 = new Date(a + "T00:00:00");
+    const d2 = new Date(b + "T00:00:00");
+
+    return Math.round(
+        Math.abs(d2-d1) / 86400000
+    );
+}
+
+function save() {
+
+    data.xp = xp;
+    data.coins = coins;
+    data.streak = streak;
+    data.lastPlayed = lastPlayed;
+    data.claimed = claimed;
+
+    data.checked = checks.map(c => c.checked);
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+}
+
+function updateStreak() {
+
+    const today = getToday();
+
+    if (!lastPlayed) {
+
+        streak = 1;
+        lastPlayed = today;
+
+    } else if (lastPlayed === today) {
+
+        // امروز قبلاً ثبت شده.
+        // Streak دوباره افزایش پیدا نمی‌کند.
+
+    } else {
+
+        const days = dayDifference(
+            lastPlayed,
+            today
+        );
+
+        /*
+        فاصله 1 روز:
+        آخرین بازی شنبه
+        بازی بعدی یکشنبه
+
+        فاصله 2 روز:
+        شنبه -> دوشنبه
+        یعنی یک روز کامل را از دست داده‌ای.
+
+        در این حالت Streak حفظ می‌شود.
+
+        اگر فاصله بیشتر از 2 روز باشد،
+        Streak از 1 شروع می‌شود.
+        */
+
+        if (days <= 2) {
+            streak++;
+        } else {
+            streak = 1;
+        }
+
+        lastPlayed = today;
+    }
+
+    save();
+}
+
+function popup(text) {
+
+    const el = document.createElement("div");
+
+    el.className = "coin-pop";
+    el.textContent = text;
+
+    el.style.left =
+        Math.random() * 70 + 15 + "%";
+
+    el.style.top =
+        Math.random() * 50 + 20 + "%";
+
+    document.body.appendChild(el);
+
+    setTimeout(() => {
+        el.remove();
+    },1000);
+}
+
+function updateAchievements() {
+
+    if (streak >= 3)
+        qs("#ach1").classList.add("unlocked");
+
+    if (streak >= 7)
+        qs("#ach2").classList.add("unlocked");
+
+    if (xp >= 100)
+        qs("#ach3").classList.add("unlocked");
+
+    if (coins >= 50)
+        qs("#ach4").classList.add("unlocked");
+
+    if (Math.floor(xp/50)+1 >= 5)
+        qs("#ach5").classList.add("unlocked");
+
+    if (claimed)
+        qs("#ach6").classList.add("unlocked");
+}
+
+function render() {
+
+    const level =
+        Math.floor(xp / 50) + 1;
+
+    const currentXP =
+        xp % 50;
+
+    qs("#xp").textContent = xp;
+    qs("#coins").textContent = coins;
+    qs("#level").textContent = level;
+
+    qs("#level2").textContent = level;
+
+    qs("#streak").textContent = streak;
+    qs("#streakText").textContent = streak;
+
+    qs("#levelProgress").textContent =
+        currentXP + " / 50 XP";
+
+    qs("#levelBar").style.width =
+        (currentXP / 50 * 100) + "%";
+
+    const done =
+        checks.filter(c => c.checked).length;
+
+    qs("#bar").style.width =
+        (done / checks.length * 100) + "%";
+
+    const reward =
+        qs("#mapReward");
+
+    reward.disabled =
+        done !== checks.length || claimed;
+
+    reward.textContent =
+        claimed
+        ? "🏆 پاداش مپ دریافت شد ✓"
+        : "🎁 گرفتن 5 Coin برای تکمیل مپ";
+
+    document
+        .querySelectorAll(".buy")
+        .forEach(button => {
+
+            button.disabled =
+                coins <
+                Number(button.dataset.cost);
+
+        });
+
+    updateAchievements();
+
+    save();
+}
+
+checks.forEach((check,index) => {
+
+    check.addEventListener("change", () => {
+
+        const amount =
+            Number(check.dataset.xp || 5);
+
+        if (check.checked) {
+
+            xp += amount;
+
+            updateStreak();
+
+            popup("⭐ +" + amount + " XP");
+
+        } else {
+
+            xp =
+                Math.max(0,xp-amount);
+
+        }
+
+        render();
+    });
+});
+
+if (Array.isArray(data.checked)) {
+
+    checks.forEach((check,index) => {
+
+        if (data.checked[index]) {
+            check.checked = true;
+        }
+
+    });
+
+}
+
+qs("#mapReward").addEventListener(
+    "click",
+    () => {
+
+        if (
+            checks.every(c => c.checked) &&
+            !claimed
+        ) {
+
+            coins += 5;
+            claimed = true;
+
+            qs("#message").textContent =
+                "🎉 عالی! 5 Coin گرفتی!";
+
+            popup("🪙 +5 Coin");
+
+            render();
+        }
+    }
+);
+
+document
+    .querySelectorAll(".buy")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const cost =
+                    Number(button.dataset.cost);
+
+                if (coins >= cost) {
+
+                    coins -= cost;
+
+                    qs("#message").textContent =
+                        "🎁 دریافت شد: " +
+                        button.dataset.reward;
+
+                    popup("🪙 -" + cost);
+
+                    render();
+                }
+            }
+        );
+
+    });
+
+/*
+وقتی بازی باز می‌شود، اگر امروز
+هنوز فعالیتی ثبت نشده باشد،
+Streak همان مقدار قبلی می‌ماند.
+
+با اولین انجام مأموریت در روز،
+updateStreak() اجرا می‌شود.
+*/
+
 render();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker
+        .register("sw.js")
+        .catch(() => {});
+
+}
+
 </script>
+
 </body>
 </html>
